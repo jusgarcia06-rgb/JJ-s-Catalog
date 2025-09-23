@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JJ’s Catalog — In-Stock</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:24px;background:#fafafa}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+    h1{margin:0 0 8px 0}
+    input,select{padding:8px 10px;border:1px solid #ddd;border-radius:10px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{background:#fff;border-radius:14px;padding:12px;border:1px solid #eee;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    img{width:100%;height:200px;object-fit:cover;border-radius:10px;background:#f1f1f1}
+    .name{font-weight:600;margin:6px 0}
+    .brand{opacity:.7;font-size:.9rem}
+    .row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+    button{padding:8px 10px;border-radius:10px;border:1px solid #222;background:#111;color:#fff;cursor:pointer}
+    .muted{opacity:.6;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <h1>JJ’s In-Stock Catalog</h1>
+  <p class="muted">Browse what I can order right now. Tap “Request” to send me the SKU.</p>
+  <header>
+    <input id="q" placeholder="Search products or SKU…" />
+    <select id="brand"><option value="">All brands</option></select>
+    <select id="category"><option value="">All categories</option></select>
+  </header>
+  <div class="grid" id="grid"></div>
+
+  <script>
+  (async function(){
+    // The data file the Action will keep updated
+    const res = await fetch("/public/inventory.json");
+    const data = await res.json();
+
+    // Build filters
+    const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();
+    const cats   = [...new Set(data.map(p=>p.category).filter(Boolean))].sort();
+    const brandSel = document.getElementById("brand");
+    const catSel   = document.getElementById("category");
+    brands.forEach(b => brandSel.append(new Option(b,b)));
+    cats.forEach(c => catSel.append(new Option(c,c)));
+
+    const grid = document.getElementById("grid");
+    const q = document.getElementById("q");
+
+    function render(){
+      const term = (q.value||"").toLowerCase();
+      const b = brandSel.value, c = catSel.value;
+      grid.innerHTML = "";
+      data
+        .filter(p => p.inStock)
+        .filter(p => (!b || p.brand===b) && (!c || p.category===c))
+        .filter(p => (p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term)))
+        .forEach(p => {
+          const card = document.createElement("div");
+          card.className = "card";
+          const price = (Number(p.price)||0).toFixed(2);
+          const img = p.image || "https://via.placeholder.com/600x400?text=No+Image";
+          card.innerHTML = `
+            <img src="${img}" alt="">
+            <div class="name">${p.name || "Unnamed product"}</div>
+            <div class="brand">${[p.brand, p.category].filter(Boolean).join(" • ")}</div>
+            <div class="row">
+              <div>${price>0 ? `$${price}` : ""}</div>
+              <button onclick="request('${encodeURIComponent(p.sku)}')">Request</button>
+            </div>
+            <div class="muted">SKU: ${p.sku}</div>
+          `;
+          grid.append(card);
+        });
+      if (!grid.children.length) {
+        grid.innerHTML = "<div class='muted'>Nothing in stock matches your filters right now.</div>";
+      }
+    }
+    window.request = (sku) => {
+      // TODO: replace with your actual Google Form prefill URL
+      const form = "https://docs.google.com/forms/d/e/your-form-id/viewform?usp=pp_url&entry.123="+sku;
+      window.open(form, "_blank");
+    };
+    q.oninput = render; brandSel.onchange = render; catSel.onchange = render; render();
+  })();
+  </script>
+</body>
+</html>

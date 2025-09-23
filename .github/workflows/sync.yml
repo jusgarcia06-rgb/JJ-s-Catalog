@@ -1,8 +1,13 @@
 name: Sync Inventory
+
 on:
   schedule:
     - cron: "*/15 * * * *"   # every 15 minutes
-  workflow_dispatch: {}      # allow manual run
+  workflow_dispatch: {}       # allow manual run
+
+permissions:
+  contents: write             # give the bot permission to push changes
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -11,11 +16,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - run: npm i csv-parse@5 node-fetch@3
+
       - name: Run sync script
         run: node scripts/sync.js
         env:
           VENDOR_FEED_URL: ${{ secrets.VENDOR_FEED_URL }}
+
       - name: Commit updated inventory.json
         run: |
           git config user.name "jj-bot"

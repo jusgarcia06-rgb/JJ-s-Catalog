@@ -79,7 +79,7 @@
   })();
 
   (async function(){
-    const res = await fetch("/public/inventory.json");
+ const res = await fetch("./public/inventory.json")
     const data = await res.json();
 
     const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();

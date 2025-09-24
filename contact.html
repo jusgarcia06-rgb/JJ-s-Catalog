@@ -3,35 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contact JJ’s Fragrances</title>
+  <title>Contact — JJ’s Fragrances</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:24px;background:#fafafa;display:flex;min-height:100vh;align-items:center;justify-content:center}
-    .container{max-width:640px;width:100%;background:#fff;padding:28px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.1);border:1px solid #eee}
-    h1{margin:0 0 6px 0;font-size:1.6rem}
-    p{line-height:1.6;margin:0 0 14px 0}
-    .card{display:grid;grid-template-columns:130px 1fr;gap:10px;margin:12px 0;padding:12px;border:1px solid #eee;border-radius:12px;background:#fafafa}
+    :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff}
+    header img{height:36px;width:auto;display:block}
+    header .brand{font-weight:700}
+    header nav{margin-left:auto;display:flex;gap:12px}
+    header a{color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:8px 10px;border-radius:10px}
+    main{max-width:720px;margin:24px auto;padding:0 20px;width:100%}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:22px}
+    h1{margin:0 0 8px 0}
+    p{line-height:1.65}
+    .info{display:grid;grid-template-columns:150px 1fr;gap:10px;margin-top:8px}
     .label{font-weight:600}
-    .value a{color:#0b69c7;text-decoration:none}
-    .value a:hover{text-decoration:underline}
-    .muted{opacity:.7}
-    .back{display:inline-block;margin-top:14px;text-decoration:none;border:1px solid #222;border-radius:10px;padding:8px 12px}
+    a.link{color:#0b69c7;text-decoration:none} a.link:hover{text-decoration:underline}
+    .muted{color:var(--muted)}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Place Order / Contact</h1>
-    <p class="muted">Reach out by phone or email with the product name and SKU from the catalog.</p>
+  <header>
+    <a href="index.html" aria-label="Home">
+      <img src="assets/logo.png" alt="JJ’s Fragrances Logo" onerror="this.style.display='none'">
+    </a>
+    <div class="brand">JJ’s Fragrances</div>
+    <nav>
+      <a href="index.html">Catalog</a>
+      <a href="contact.html"><strong>Contact</strong></a>
+      <a href="info.html">Info & FAQ</a>
+    </nav>
+  </header>
 
+  <main>
     <div class="card">
-      <div class="label">Phone</div>
-      <div class="value"><a href="tel:14694320561">(469) 432-0561</a></div>
-    </div>
-    <div class="card">
-      <div class="label">Email</div>
-      <div class="value"><a href="mailto:jjsfragrances@gmail.com">jjsfragrances@gmail.com</a></div>
-    </div>
+      <h1>Contact / Place Order</h1>
+      <p class="muted">Preferred: Text or Email (available 24/7). Include the <strong>Product Name or SKU</strong> from the catalog.</p>
 
-    <a class="back" href="index.html">← Back to Catalog</a>
-  </div>
+      <div class="info">
+        <div class="label">Text/Call</div>
+        <div><a class="link" href="tel:14694320561">(469) 432-0561</a></div>
+
+        <div class="label">Email</div>
+        <div><a class="link" href="mailto:jjsfragrances@gmail.com">jjsfragrances@gmail.com</a></div>
+      </div>
+
+      <p class="muted" style="margin-top:12px">DFW in-person preferred. U.S.-only shipping available for an extra fee (varies by location).</p>
+    </div>
+  </main>
 </body>
 </html>

@@ -8,11 +8,9 @@
     :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; --banner:#0b69c7; --bannerText:#fff; }
     *{box-sizing:border-box}
     body{font-family:system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:var(--ink)}
-    /* Banner */
     .banner{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--banner);color:var(--bannerText)}
     .banner a{color:#fff;font-weight:700;text-decoration:underline}
     .banner button{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.8);color:#fff;padding:4px 10px;border-radius:8px;cursor:pointer}
-    /* Header / Nav */
     header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
     header img{height:36px;width:auto;display:block}
     header .brand{font-weight:700}
@@ -32,10 +30,9 @@
   </style>
 </head>
 <body>
-  <!-- Dismissible banner -->
-  <div id="infoBanner" class="banner" role="region" aria-label="Order info banner">
+  <div id="infoBanner" class="banner">
     📢 For pricing & how ordering works, please read the <a href="info.html">Info & FAQ</a>.
-    <button id="closeBanner" aria-label="Close notice">Close</button>
+    <button id="closeBanner">Close</button>
   </div>
 
   <header>
@@ -51,13 +48,12 @@
   </header>
 
   <main>
-    <h1 style="margin:0 0 6px 0;">In-Stock Catalog</h1>
+    <h1>In-Stock Catalog</h1>
     <p class="muted">Discounted designer fragrances • 100% authentic • DFW-focused • U.S. shipping available</p>
 
     <div class="filters">
-      <input id="q" placeholder="Search Product or SKU…" />
+      <input id="q" placeholder="Search Product…" />
       <select id="brand"><option value="">All brands</option></select>
-      <!-- Fixed gender categories exactly as requested -->
       <select id="gender">
         <option value="">ALL CATEGORIES</option>
         <option value="MENS">MENS</option>
@@ -71,14 +67,11 @@
   </main>
 
   <script>
-  // ------- Banner logic -------
   (function(){
     const KEY = "jj_info_banner_dismissed";
     const banner = document.getElementById("infoBanner");
     const closeBtn = document.getElementById("closeBanner");
-    if (!localStorage.getItem(KEY)) {
-      banner.style.display = "flex";
-    }
+    if (!localStorage.getItem(KEY)) banner.style.display = "flex";
     closeBtn?.addEventListener("click", () => {
       banner.style.display = "none";
       localStorage.setItem(KEY, "1");
@@ -89,7 +82,6 @@
     const res = await fetch("/public/inventory.json");
     const data = await res.json();
 
-    // Build dynamic brand list
     const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();
     const brandSel = document.getElementById("brand");
     brands.forEach(b => brandSel.append(new Option(b,b)));
@@ -101,32 +93,28 @@
     function render(){
       const term = (q.value||"").toLowerCase();
       const selBrand = brandSel.value;
-      const selGender = genderSel.value; // "", "MENS", "WOMENS", "UNISEX", "CHILDRENS"
+      const selGender = genderSel.value;
 
       grid.innerHTML = "";
       data
         .filter(p => p.inStock)
         .filter(p => (!selBrand || p.brand === selBrand))
         .filter(p => (!selGender || (p.gender === selGender)))
-        .filter(p => (p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term)))
+        .filter(p => (p.name?.toLowerCase().includes(term)))
         .forEach(p => {
           const card = document.createElement("div");
           card.className = "card";
           const img = p.image || "https://via.placeholder.com/600x400?text=No+Image";
-          const genderText = p.gender || "UNISEX";
           card.innerHTML = `
             <img src="${img}" alt="">
             <div class="name">${p.name || "Unnamed product"}</div>
-            <div class="brandline">${[p.brand, genderText].filter(Boolean).join(" • ")}</div>
+            <div class="brandline">${[p.brand, p.gender].filter(Boolean).join(" • ")}</div>
             <div class="row"><a class="btn" href="contact.html">Place Order</a></div>
-            <div class="muted">SKU: ${p.sku}${p.qty ? " • Qty: " + p.qty : ""}</div>
           `;
           grid.append(card);
         });
 
-      if (!grid.children.length) {
-        grid.innerHTML = "<div class='muted'>No products match your filters right now.</div>";
-      }
+      if (!grid.children.length) grid.innerHTML = "<div class='muted'>No products match your filters right now.</div>";
     }
 
     q.oninput = render;

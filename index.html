@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>JJ’s In-Stock Catalog</title>
   <style>
-    :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; }
+    :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; --banner:#0b69c7; --bannerText:#fff; }
     *{box-sizing:border-box}
     body{font-family:system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:var(--ink)}
-    header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0}
+    /* Banner */
+    .banner{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--banner);color:var(--bannerText)}
+    .banner a{color:#fff;font-weight:700;text-decoration:underline}
+    .banner button{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.8);color:#fff;padding:4px 10px;border-radius:8px;cursor:pointer}
+    /* Header / Nav */
+    header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
     header img{height:36px;width:auto;display:block}
     header .brand{font-weight:700}
     header nav{margin-left:auto;display:flex;gap:12px}
@@ -27,6 +32,12 @@
   </style>
 </head>
 <body>
+  <!-- Dismissible banner -->
+  <div id="infoBanner" class="banner" role="region" aria-label="Order info banner">
+    📢 For pricing & how ordering works, please read the <a href="info.html">Info & FAQ</a>.
+    <button id="closeBanner" aria-label="Close notice">Close</button>
+  </div>
+
   <header>
     <a href="index.html" aria-label="Home">
       <img src="assets/logo.png" alt="JJ’s Fragrances Logo" onerror="this.style.display='none'">
@@ -53,6 +64,21 @@
   </main>
 
   <script>
+  // ------- Banner logic (remember dismissal) -------
+  (function(){
+    const KEY = "jj_info_banner_dismissed";
+    const banner = document.getElementById("infoBanner");
+    const closeBtn = document.getElementById("closeBanner");
+    if (!localStorage.getItem(KEY)) {
+      banner.style.display = "flex";
+    }
+    closeBtn?.addEventListener("click", () => {
+      banner.style.display = "none";
+      localStorage.setItem(KEY, "1");
+    });
+  })();
+
+  // ------- Catalog render -------
   (async function(){
     const res = await fetch("/public/inventory.json");
     const data = await res.json();

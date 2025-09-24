@@ -57,8 +57,8 @@
     <div class="filters">
       <input id="q" placeholder="Search Product or SKU…" />
       <select id="brand"><option value="">All brands</option></select>
-      <!-- Fixed categories exactly as requested -->
-      <select id="category">
+      <!-- Fixed gender categories exactly as requested -->
+      <select id="gender">
         <option value="">ALL CATEGORIES</option>
         <option value="MENS">MENS</option>
         <option value="WOMENS">WOMENS</option>
@@ -71,7 +71,7 @@
   </main>
 
   <script>
-  // ------- Banner logic (remember dismissal) -------
+  // ------- Banner logic -------
   (function(){
     const KEY = "jj_info_banner_dismissed";
     const banner = document.getElementById("infoBanner");
@@ -85,59 +85,39 @@
     });
   })();
 
-  // ------- Category normalization -------
-  function normalizeCategory(raw) {
-    const s = String(raw || "").toLowerCase();
-
-    // Common buckets
-    if (/(^|\W)men('?s)?(\W|$)|\bmale\b|\bm\b/.test(s)) return "MENS";
-    if (/(^|\W)women('?s)?(\W|$)|\bfemale\b|\bw\b|ladies/.test(s)) return "WOMENS";
-    if (/\bunisex\b|\buni\b/.test(s)) return "UNISEX";
-    if (/\bchild|\bkid|\bboy|\bgirl|\byouth|\bbaby|\bchildren/.test(s)) return "CHILDRENS";
-
-    // Handle vendor noise like "shop all" → leave uncategorized; show in "ALL" by default
-    if (/shop all|all|misc|other/.test(s)) return ""; // uncategorized
-
-    // Default: treat unknowns as UNISEX to avoid hiding them from specific filters
-    return "UNISEX";
-  }
-
   (async function(){
     const res = await fetch("/public/inventory.json");
     const data = await res.json();
 
-    // Build dynamic brands (keep categories fixed)
+    // Build dynamic brand list
     const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();
     const brandSel = document.getElementById("brand");
     brands.forEach(b => brandSel.append(new Option(b,b)));
 
-    const catSel = document.getElementById("category");
+    const genderSel = document.getElementById("gender");
     const grid = document.getElementById("grid");
     const q = document.getElementById("q");
 
     function render(){
       const term = (q.value||"").toLowerCase();
-      const selectedBrand = brandSel.value;
-      const selectedCat = catSel.value; // "", "MENS", "WOMENS", "UNISEX", "CHILDRENS"
+      const selBrand = brandSel.value;
+      const selGender = genderSel.value; // "", "MENS", "WOMENS", "UNISEX", "CHILDRENS"
 
       grid.innerHTML = "";
       data
         .filter(p => p.inStock)
-        .filter(p => (!selectedBrand || p.brand === selectedBrand))
-        .filter(p => {
-          const cat = normalizeCategory(p.category);
-          return !selectedCat || cat === selectedCat;
-        })
+        .filter(p => (!selBrand || p.brand === selBrand))
+        .filter(p => (!selGender || (p.gender === selGender)))
         .filter(p => (p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term)))
         .forEach(p => {
           const card = document.createElement("div");
           card.className = "card";
           const img = p.image || "https://via.placeholder.com/600x400?text=No+Image";
-          const normCat = normalizeCategory(p.category) || "OTHER";
+          const genderText = p.gender || "UNISEX";
           card.innerHTML = `
             <img src="${img}" alt="">
             <div class="name">${p.name || "Unnamed product"}</div>
-            <div class="brandline">${[p.brand, normCat].filter(Boolean).join(" • ")}</div>
+            <div class="brandline">${[p.brand, genderText].filter(Boolean).join(" • ")}</div>
             <div class="row"><a class="btn" href="contact.html">Place Order</a></div>
             <div class="muted">SKU: ${p.sku}${p.qty ? " • Qty: " + p.qty : ""}</div>
           `;
@@ -151,7 +131,7 @@
 
     q.oninput = render;
     brandSel.onchange = render;
-    catSel.onchange = render;
+    genderSel.onchange = render;
     render();
   })();
   </script>

@@ -8,18 +8,16 @@
     :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; --banner:#0b69c7; --bannerText:#fff; }
     *{box-sizing:border-box}
     body{font-family:system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
-    /* Banner */
     .banner{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--banner);color:var(--bannerText)}
     .banner a{color:#fff;font-weight:700;text-decoration:underline}
     .banner button{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.8);color:#fff;padding:4px 10px;border-radius:8px;cursor:pointer}
-    /* Header / Nav */
     header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff}
     header img{height:36px;width:auto;display:block}
     header .brand{font-weight:700}
     header nav{margin-left:auto;display:flex;gap:12px}
     header a{color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:8px 10px;border-radius:10px}
-    main{max-width:720px;margin:24px auto;padding:0 20px;width:100%}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:22px}
+    main{max-width:760px;margin:24px auto;padding:0 20px;width:100%}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:22px;margin-bottom:14px}
     h1{margin:0 0 8px 0}
     p{line-height:1.65}
     .info{display:grid;grid-template-columns:150px 1fr;gap:10px;margin-top:8px}
@@ -51,21 +49,27 @@
     <div class="card">
       <h1>Contact / Place Order</h1>
       <p class="muted">Preferred: Text or Email (available 24/7). Include the <strong>Product Name or SKU</strong> from the catalog.</p>
-
       <div class="info">
         <div class="label">Text/Call</div>
         <div><a class="link" href="tel:14694320561">(469) 432-0561</a></div>
-
         <div class="label">Email</div>
         <div><a class="link" href="mailto:jjsfragrances@gmail.com">jjsfragrances@gmail.com</a></div>
       </div>
+    </div>
 
-      <p class="muted" style="margin-top:12px">DFW in-person preferred. U.S.-only shipping available for an extra fee (varies by location).</p>
+    <div class="card">
+      <h2>Payment & Fulfillment Summary</h2>
+      <ul>
+        <li><strong>Upfront payment required</strong> to request an order <span style="border:1px solid #eee;border-radius:999px;padding:2px 8px;margin-left:6px;">Cash / Zelle / Cash App</span></li>
+        <li>After payment, I <strong>place the order</strong>. You’ll be notified as soon as it arrives to me.</li>
+        <li><strong>DFW in person preferred</strong> for hand-off. <strong>U.S. shipping</strong> is available for an extra fee (varies by location).</li>
+        <li>Some items have <strong>MOQ</strong>. If your request is under MOQ, I’ll offer options (group order, add items, small surcharge, or I may cover the balance at my discretion).</li>
+      </ul>
+      <p class="muted">Full details: see the <a class="link" href="info.html">Info & FAQ</a> page.</p>
     </div>
   </main>
 
   <script>
-  // Banner logic (share the same key so closing on one page hides it on the other too)
   (function(){
     const KEY = "jj_info_banner_dismissed";
     const banner = document.getElementById("infoBanner");

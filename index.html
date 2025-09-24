@@ -14,15 +14,14 @@
     img{width:100%;height:200px;object-fit:cover;border-radius:10px;background:#f1f1f1}
     .name{font-weight:600;margin:6px 0}
     .brand{opacity:.7;font-size:.9rem}
-    .row{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px}
-    button,a.btn{padding:8px 10px;border-radius:10px;border:1px solid #222;background:#111;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
-    .muted{opacity:.6;font-size:.9rem}
-    .btn.secondary{background:#fff;color:#111}
+    .row{display:flex;justify-content:flex-end;align-items:center;margin-top:10px;gap:8px}
+    a.btn{padding:8px 12px;border-radius:10px;border:1px solid #222;background:#111;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+    .muted{opacity:.6;font-size:.9rem;margin-top:6px}
   </style>
 </head>
 <body>
   <h1>JJ’s In-Stock Catalog</h1>
-  <p class="muted">Browse what I can order right now. Tap “Text” or “Email” to send me the SKU.</p>
+  <p class="muted">Browse what I can order right now. Click “Place Order” to see my contact info.</p>
 
   <header>
     <input id="q" placeholder="Search products or SKU…" />
@@ -33,26 +32,12 @@
   <div class="grid" id="grid"></div>
 
   <script>
-  // ======= YOUR CONTACT INFO =======
-  const CONTACT_PHONE = "14694320561"; // your phone in international format
-  const CONTACT_EMAIL = "jjsfragrances@gmail.com";
-  // =================================
-
-  // Build SMS and Email links with prefilled content
-  function smsLink(sku, name) {
-    const body = `Hi, I'm interested in: ${name} (SKU: ${sku}). Is it available?`;
-    return `sms:${CONTACT_PHONE}?&body=${encodeURIComponent(body)}`;
-  }
-  function emailLink(sku, name) {
-    const subject = `Product request: ${name} (${sku})`;
-    const body = `Hi JJ,\n\nI'm interested in the following item:\n- Name: ${name}\n- SKU: ${sku}\n\nThanks!`;
-    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-
   (async function(){
+    // Pull the generated inventory (no prices)
     const res = await fetch("/public/inventory.json");
     const data = await res.json();
 
+    // Build filter dropdowns
     const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();
     const cats   = [...new Set(data.map(p=>p.category).filter(Boolean))].sort();
     const brandSel = document.getElementById("brand");
@@ -75,18 +60,14 @@
           const card = document.createElement("div");
           card.className = "card";
           const img = p.image || "https://via.placeholder.com/600x400?text=No+Image";
-          const safeSku = (p.sku||"").replace(/"/g, '\\"');
-          const safeName = (p.name||"").replace(/"/g, '\\"');
-
           card.innerHTML = `
             <img src="${img}" alt="">
             <div class="name">${p.name || "Unnamed product"}</div>
             <div class="brand">${[p.brand, p.category].filter(Boolean).join(" • ")}</div>
             <div class="row">
-              <a class="btn" href="${smsLink(safeSku, safeName)}">Text</a>
-              <a class="btn secondary" href="${emailLink(safeSku, safeName)}">Email</a>
+              <a class="btn" href="contact.html">Place Order</a>
             </div>
-            <div class="muted">SKU: ${p.sku} ${p.qty ? "• Qty: " + p.qty : ""}</div>
+            <div class="muted">SKU: ${p.sku}${p.qty ? " • Qty: " + p.qty : ""}</div>
           `;
           grid.append(card);
         });

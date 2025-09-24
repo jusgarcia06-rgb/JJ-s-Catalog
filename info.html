@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Info & FAQ — JJ’s Fragrances</title>
+  <style>
+    :root { --card:#fff; --bg:#fafafa; --border:#eee; --ink:#111; --muted:#6b6b6b; }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;background:var(--bg);color:var(--ink)}
+    header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0}
+    header img{height:36px;width:auto;display:block}
+    header .brand{font-weight:700}
+    header nav{margin-left:auto;display:flex;gap:12px}
+    header a{color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:8px 10px;border-radius:10px}
+    main{max-width:860px;margin:24px auto;padding:0 20px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px;margin:14px 0}
+    h1{margin:0 0 8px 0}
+    h2{margin:10px 0}
+    p{line-height:1.65;margin:10px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    .back{display:inline-block;margin-top:14px;text-decoration:none;border:1px solid var(--ink);border-radius:10px;padding:8px 12px}
+    .info-row{display:grid;grid-template-columns:150px 1fr;gap:10px}
+    .label{font-weight:600}
+    a.link{color:#0b69c7;text-decoration:none} a.link:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" aria-label="Home">
+      <!-- Replace logo.png with your real file name if different -->
+      <img src="assets/logo.png" alt="JJ’s Fragrances Logo" onerror="this.style.display='none'">
+    </a>
+    <div class="brand">JJ’s Fragrances</div>
+    <nav>
+      <a href="index.html">Catalog</a>
+      <a href="contact.html">Contact</a>
+      <a href="info.html"><strong>Info & FAQ</strong></a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Welcome</h1>
+      <p>JJ’s Fragrances offers <strong>100% genuine designer products</strong>, brand new and always <strong>discounted well below retail</strong>. Prices are provided upon request—contact me anytime, and I’ll respond quickly with current deals.</p>
+      <p class="muted">Based in Texas • Serving the DFW area in person • Shipping available within the U.S. (fee varies by location)</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Pricing & Inquiries</h2>
+        <p>Prices are <strong>not listed</strong> on the site. <strong>All prices are provided upon request</strong> via text or email. This helps me keep your cost <strong>well below retail</strong> and reflect live availability.</p>
+        <p>To inquire: send the <strong>Product Name or SKU</strong> (either is fine) from the catalog, and I’ll quote you promptly.</p>
+      </div>
+      <div class="card">
+        <h2>How Ordering Works</h2>
+        <ol>
+          <li>Browse the catalog and note the <strong>Product Name or SKU</strong>.</li>
+          <li><a class="link" href="contact.html">Contact me</a> (text or email 24/7) for pricing and availability.</li>
+          <li>I’ll place the order and coordinate pickup in DFW or ship anywhere in the U.S. (shipping fee varies by location).</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>DFW Focus & Shipping</h2>
+        <p>I primarily serve the <strong>DFW area</strong> for in-person transactions. <strong>U.S.-only shipping</strong> is available for an extra fee that varies by destination.</p>
+      </div>
+      <div class="card">
+        <h2>Authenticity</h2>
+        <p>Every product is <strong>100% authentic</strong> and brand new. I take pride in quality and consistency—no grey-area or questionable sources.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Responsibility & Support</h2>
+      <p>I act as your trusted point of contact to secure discounted pricing and fast turnaround. Orders are fulfilled through my supplier; as such, I’m <strong>not responsible for supplier delays, stock changes, or carrier damage</strong>.</p>
+      <p><strong>That said, I will do my absolute best to work with you</strong> to resolve issues and ensure you receive your product as expected.</p>
+    </div>
+
+    <div class="card">
+      <h2>Contact (24/7 Preferred: Text or Email)</h2>
+      <div class="info-row">
+        <div class="label">Text/Call</div>
+        <div><a class="link" href="tel:14694320561">(469) 432-0561</a></div>
+      </div>
+      <div class="info-row">
+        <div class="label">Email</div>
+        <div><a class="link" href="mailto:jjsfragrances@gmail.com">jjsfragrances@gmail.com</a></div>
+      </div>
+      <p class="muted">When you reach out, include the <strong>Product Name or SKU</strong>—you don’t need both.</p>
+    </div>
+
+    <a class="back" href="index.html">← Back to Catalog</a>
+  </main>
+</body>
+</html>

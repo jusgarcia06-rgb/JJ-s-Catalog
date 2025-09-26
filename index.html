@@ -84,8 +84,8 @@
     });
   })();
 
-  // ------- Image helper: proxy + https + no-referrer fallback -------
-  const USE_PROXY = true; // turn off if you later self-host thumbnails
+  // ------- Image helper: proxy + https + no-referrer -------
+  const USE_PROXY = true;
   function normalizeHttps(url) {
     if (!url) return "";
     return url.replace(/^http:\/\//i, "https://");
@@ -94,17 +94,20 @@
     const clean = normalizeHttps(url);
     if (!clean) return "";
     if (!USE_PROXY) return clean;
-    // images.weserv.nl expects the URL without scheme; it will fetch/cache and serve over https
     const bare = clean.replace(/^https?:\/\//i, "");
     return `https://images.weserv.nl/?url=${encodeURIComponent(bare)}&fit=cover&output=webp`;
   }
   const PLACEHOLDER = "https://via.placeholder.com/600x400?text=Image+Unavailable";
 
   (async function(){
-    const res = await fetch("/public/inventory.json");
+    // IMPORTANT: relative path for GitHub Pages
+    const res = await fetch("./public/inventory.json");
+    if (!res.ok) {
+      console.error("Failed to load inventory.json", res.status, res.statusText);
+      return;
+    }
     const data = await res.json();
 
-    // Build dynamic brand list
     const brands = [...new Set(data.map(p=>p.brand).filter(Boolean))].sort();
     const brandSel = document.getElementById("brand");
     brands.forEach(b => brandSel.append(new Option(b,b)));
@@ -134,7 +137,6 @@
             <div class="brandline">${[p.brand, p.gender].filter(Boolean).join(" • ")}</div>
             <div class="row"><a class="btn" href="contact.html">Place Order</a></div>
           `;
-          // extra safety: if proxy still fails, show placeholder
           const img = card.querySelector("img");
           img.onerror = () => { img.src = PLACEHOLDER; };
           grid.append(card);

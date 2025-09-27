@@ -1,4 +1,4 @@
-// scripts/sync.js — mirrors vendor images locally (with referer/user-agent retries)
+// scripts/sync.js — mirror images locally with proxy fallbacks
 import fetch from "node-fetch";
 import { parse } from "csv-parse/sync";
 import fs from "fs";
@@ -7,7 +7,7 @@ import crypto from "crypto";
 
 const FEED_URL = process.env.VENDOR_FEED_URL;
 
-// ---- utils ----
+// ---------- utilities ----------
 function toNumber(v) {
   const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
   return Number.isFinite(n) ? n : 0;
@@ -30,7 +30,7 @@ async function getCSV() {
   return await res.text();
 }
 
-// ---- image picking (fuzzy) ----
+// ---------- pick an image column (fuzzy) ----------
 function normalizeUrl(url) {
   if (!url) return "";
   let u = String(url).trim();
@@ -45,7 +45,6 @@ function pickImageFuzzy(row) {
     .filter(([k, v]) => v && String(v).trim())
     .map(([k, v]) => ({ key: k, norm: k.toLowerCase().replace(/[\s_]/g, ""), value: String(v).trim() }))
     .filter(({ norm }) => norm.includes("image") && norm.includes("url"));
-
   if (imageLike.length === 0) return "";
 
   const order = ["thumb", "small", "medium", "large", "primary", "main", "base"];
@@ -56,9 +55,8 @@ function pickImageFuzzy(row) {
   return normalizeUrl(imageLike[0].value);
 }
 
-// ---- robust image download with referer/user-agent retries ----
+// ---------- robust download: direct -> direct(no query) -> proxyA -> proxyB ----------
 const HEADER_PROFILES = [
-  // Pretend we came from the store (BigCommerce often requires a referer)
   {
     name: "nandansons",
     headers: {
@@ -68,7 +66,6 @@ const HEADER_PROFILES = [
       "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
     },
   },
-  // Generic ecommerce referer (some stores validate domain loosely)
   {
     name: "generic-ecom",
     headers: {
@@ -78,7 +75,6 @@ const HEADER_PROFILES = [
       "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
     },
   },
-  // No referer (as last resort)
   {
     name: "no-referer",
     headers: {
@@ -89,26 +85,76 @@ const HEADER_PROFILES = [
   },
 ];
 
-async function tryFetchImage(url) {
+function stripQuery(u) {
+  try {
+    const url = new URL(u);
+    url.search = "";
+    return url.toString();
+  } catch {
+    return u;
+  }
+}
+function proxyUrls(u) {
+  const clean = normalizeUrl(u);
+  if (!clean) return [];
+  const bare = clean.replace(/^https?:\/\//i, "");
+  return [
+    `https://images.weserv.nl/?url=${encodeURIComponent(bare)}&output=webp`, // proxy A
+    `https://wsrv.nl/?url=${encodeURIComponent(bare)}&output=webp`,          // proxy B (alias)
+  ];
+}
+
+async function fetchImageWithProfiles(url) {
   for (const prof of HEADER_PROFILES) {
     try {
       const res = await fetch(url, { headers: prof.headers, redirect: "follow" });
-      if (!res.ok) {
-        // continue to next profile
-        continue;
-      }
+      if (!res.ok) continue;
       const ct = (res.headers.get("content-type") || "").toLowerCase();
-      if (!ct.includes("image")) {
-        // sometimes BigCommerce returns HTML challenge; skip
-        continue;
-      }
+      if (!ct.includes("image")) continue;
       const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.length < 256) continue; // avoid empty pixels/blocked gifs
-      return { ok: true, buf, contentType: ct, profile: prof.name };
+      if (buf.length < 256) continue;
+      return { ok: true, buf, contentType: ct, tried: prof.name };
     } catch {
-      // try next profile
+      // try next
     }
   }
+  return { ok: false };
+}
+
+async function tryDownloadAny(url) {
+  // 1) direct
+  let res = await fetchImageWithProfiles(url);
+  if (res.ok) return res;
+
+  // 2) direct without query
+  const noQuery = stripQuery(url);
+  if (noQuery !== url) {
+    res = await fetchImageWithProfiles(noQuery);
+    if (res.ok) return res;
+  }
+
+  // 3) proxies
+  for (const pu of proxyUrls(url)) {
+    try {
+      const r = await fetch(pu, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+          "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        },
+        redirect: "follow",
+      });
+      if (!r.ok) continue;
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      if (!ct.includes("image")) continue;
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length < 256) continue;
+      return { ok: true, buf, contentType: ct, tried: "proxy" };
+    } catch {
+      // try next proxy
+    }
+  }
+
   return { ok: false };
 }
 
@@ -131,29 +177,27 @@ function chooseExt(url, contentType) {
 }
 
 async function downloadImageToLocal(url, sku) {
-  const res = await tryFetchImage(url);
-  if (!res.ok) return "";
+  const result = await tryDownloadAny(url);
+  if (!result.ok) return "";
 
-  const ext = chooseExt(url, res.contentType);
+  const ext = chooseExt(url, result.contentType);
+  const safeSku = (sku || "").trim().replace(/[^\w.-]+/g, "_");
   const filename =
-    (sku && sku.trim() ? sku.trim().replace(/[^\w.-]+/g, "_") : crypto.createHash("md5").update(url).digest("hex")) +
-    ext;
+    (safeSku ? safeSku : crypto.createHash("md5").update(url).digest("hex")) + (ext || ".jpg");
 
   const outDir = "public/images";
   fs.mkdirSync(outDir, { recursive: true });
-  const outPath = path.join(outDir, filename);
-  fs.writeFileSync(outPath, res.buf);
+  fs.writeFileSync(path.join(outDir, filename), result.buf);
   return "images/" + filename;
 }
 
-// ---- main ----
+// ---------- main ----------
 async function run() {
   const csvText = await getCSV();
   const rows = parse(csvText, { columns: true, skip_empty_lines: true });
 
   const out = [];
-  let attempted = 0,
-    saved = 0;
+  let attempted = 0, saved = 0;
 
   for (const r of rows) {
     const stock = toNumber(r["Current Stock"]);
@@ -174,11 +218,9 @@ async function run() {
     if (remote) {
       attempted++;
       const localRel = await downloadImageToLocal(remote, item.sku);
-      if (localRel) {
-        item.image = localRel;
-        saved++;
-      }
+      if (localRel) { item.image = localRel; saved++; }
     }
+
     out.push(item);
   }
 

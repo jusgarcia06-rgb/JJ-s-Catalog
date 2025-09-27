@@ -1,11 +1,12 @@
-// scripts/sync.js — robust image selection + gender normalization + optional overrides
+// scripts/sync.js — mirror images locally
 import fetch from "node-fetch";
 import { parse } from "csv-parse/sync";
 import fs from "fs";
+import path from "path";
+import crypto from "crypto";
 
 const FEED_URL = process.env.VENDOR_FEED_URL;
 
-// ---------- helpers ----------
 function toNumber(v) {
   const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
   return Number.isFinite(n) ? n : 0;
@@ -13,13 +14,10 @@ function toNumber(v) {
 
 function normalizeGender(rawGender, fallbackCategory) {
   const s = String(rawGender || fallbackCategory || "").trim().toLowerCase();
-
   if (/(^|\W)men('?s)?(\W|$)|\bmale\b|\bm\b/.test(s)) return "MENS";
   if (/(^|\W)women('?s)?(\W|$)|\bfemale\b|\bw\b|ladies/.test(s)) return "WOMENS";
   if (/\bunisex\b|\buni\b/.test(s)) return "UNISEX";
   if (/\bchild|\bkid|\bboy|\bgirl|\byouth|\bbaby|\bchildren/.test(s)) return "CHILDRENS";
-
-  // catch-all vendor labels
   if (/shop all|all|misc|other/.test(s)) return "UNISEX";
   return "UNISEX";
 }
@@ -27,17 +25,7 @@ function normalizeGender(rawGender, fallbackCategory) {
 function loadOverrides() {
   try {
     const txt = fs.readFileSync("data/gender-overrides.json", "utf-8");
-    const arr = JSON.parse(txt);
-    return arr.map(o => {
-      if (o.name_regex) {
-        const source = String(o.name_regex);
-        const hasInlineCI = source.startsWith("(?i)");
-        const pattern = hasInlineCI ? source.slice(4) : source;
-        const flags = hasInlineCI ? "i" : "i";
-        return { ...o, __regex: new RegExp(pattern, flags) };
-      }
-      return o;
-    });
+    return JSON.parse(txt);
   } catch {
     return [];
   }
@@ -45,12 +33,8 @@ function loadOverrides() {
 
 function applyOverrides(item, overrides) {
   if (item.sku) {
-    const bySku = overrides.find(o => o.sku && String(o.sku).trim().toLowerCase() === item.sku.toLowerCase());
+    const bySku = overrides.find(o => o.sku && o.sku.toLowerCase() === item.sku.toLowerCase());
     if (bySku?.gender) return bySku.gender;
-  }
-  if (item.name) {
-    const byName = overrides.find(o => o.__regex && o.__regex.test(item.name));
-    if (byName?.gender) return byName.gender;
   }
   return null;
 }
@@ -62,68 +46,89 @@ async function getCSV() {
   return await res.text();
 }
 
-// Pick the first non-empty image among common vendor columns
-function pickImage(r) {
-  const candidates = [
-    "Thumb Image URL",
-    "Small Image URL",
-    "Medium Image URL",
-    "Large Image URL",
-    "Image URL",
-    "Primary Image URL",
-    "Image",
-    "image_url",
-  ];
-
-  let url = "";
-  for (const key of candidates) {
-    if (r[key] && String(r[key]).trim()) {
-      url = String(r[key]).trim();
-      break;
-    }
-  }
+// --- image helpers ---
+function normalizeUrl(url) {
   if (!url) return "";
-
-  // normalize protocol
-  if (url.startsWith("//")) url = "https:" + url;
-  if (url.startsWith("http://")) url = "https://" + url.slice(7);
-  return url;
+  let u = String(url).trim();
+  if (!u) return "";
+  if (u.startsWith("//")) u = "https:" + u;
+  if (u.startsWith("http://")) u = "https://" + u.slice(7);
+  return u;
 }
 
-function mapRow(r, overrides) {
-  const stock = toNumber(r["Current Stock"]);
-  const baseGender = normalizeGender(r["Gender"], r["Category"]);
+function pickImageFuzzy(row) {
+  const entries = Object.entries(row);
+  const imageLike = entries
+    .filter(([k, v]) => v && String(v).trim())
+    .map(([k, v]) => {
+      const norm = k.toLowerCase().replace(/[\s_]/g, "");
+      return { key: k, norm, value: String(v).trim() };
+    })
+    .filter(({ norm }) => norm.includes("image") && norm.includes("url"));
 
-  const item = {
-    sku: String(r["SKU"] || "").trim(), // not shown on site, but kept internally
-    name: String(r["Product Name"] || "").trim(),
-    brand: String(r["Brand"] || "").trim(),
-    category: String(r["Category"] || "").trim(),
-    gender: baseGender,
-    inStock: stock > 0,
-    qty: stock,
-    image: pickImage(r),
-  };
-
-  const forced = applyOverrides(item, overrides);
-  if (forced) item.gender = forced;
-
-  return item;
+  if (imageLike.length === 0) return "";
+  const order = ["thumb", "small", "medium", "large", "primary", "main", "base"];
+  for (const pref of order) {
+    const hit = imageLike.find(x => x.norm.includes(pref));
+    if (hit) return normalizeUrl(hit.value);
+  }
+  return normalizeUrl(imageLike[0].value);
 }
 
-// ---------- main ----------
+async function downloadImage(url, sku) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = await res.arrayBuffer();
+    const ext = path.extname(new URL(url).pathname).split("?")[0] || ".jpg";
+    const filename = sku ? sku + ext : crypto.createHash("md5").update(url).digest("hex") + ext;
+    const localPath = path.join("public/images", filename);
+    fs.writeFileSync(localPath, Buffer.from(buf));
+    return "images/" + filename;
+  } catch (e) {
+    console.warn("Image download failed for", url, e.message);
+    return "";
+  }
+}
+
 async function run() {
   const csvText = await getCSV();
   const rows = parse(csvText, { columns: true, skip_empty_lines: true });
 
   const overrides = loadOverrides();
-  const out = rows.map(r => mapRow(r, overrides)).filter(p => p.inStock);
+  fs.mkdirSync("public/images", { recursive: true });
 
-  fs.mkdirSync("public", { recursive: true });
+  const out = [];
+  for (const r of rows) {
+    const stock = toNumber(r["Current Stock"]);
+    if (stock <= 0) continue;
+
+    const baseGender = normalizeGender(r["Gender"], r["Category"]);
+    const item = {
+      sku: String(r["SKU"] || "").trim(),
+      name: String(r["Product Name"] || "").trim(),
+      brand: String(r["Brand"] || "").trim(),
+      category: String(r["Category"] || "").trim(),
+      gender: baseGender,
+      inStock: true,
+      qty: stock,
+      image: "",
+    };
+
+    const forced = applyOverrides(item, overrides);
+    if (forced) item.gender = forced;
+
+    const remoteImg = pickImageFuzzy(r);
+    if (remoteImg) {
+      const localImg = await downloadImage(remoteImg, item.sku);
+      if (localImg) item.image = localImg;
+    }
+
+    out.push(item);
+  }
+
   fs.writeFileSync("public/inventory.json", JSON.stringify(out, null, 2));
-  console.log(
-    `Wrote public/inventory.json with ${out.length} in-stock items (robust image selection, gender normalized, overrides=${overrides.length})`
-  );
+  console.log(`Wrote ${out.length} items with local images into public/inventory.json`);
 }
 
 run().catch(err => {

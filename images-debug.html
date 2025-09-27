@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Image Debug — JJ’s Catalog</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:16px;background:#fafafa;color:#111}
+    h1{margin:0 0 12px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    input,button{padding:8px 10px;border:1px solid #ddd;border-radius:8px}
+    table{border-collapse:collapse;width:100%;background:#fff}
+    th,td{border:1px solid #eee;padding:8px;vertical-align:top;font-size:14px}
+    .ok{color:#0a7}
+    .fail{color:#d33}
+    .cell-img{width:160px}
+    img{width:150px;height:100px;object-fit:cover;background:#f1f1f1}
+    code{font-size:12px;word-break:break-all}
+  </style>
+</head>
+<body>
+  <h1>Image Debug</h1>
+  <div class="controls">
+    <label>Limit <input id="limit" type="number" value="40" min="1" max="200" /></label>
+    <button id="run">Run Test</button>
+    <span id="status"></span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Direct</th>
+        <th>Proxy</th>
+        <th>Original URL</th>
+        <th>Proxy URL</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    const PLACEHOLDER = "https://placehold.co/600x400?text=No+Image";
+    function toHttps(u){ return u ? u.replace(/^http:\/\//i,"https://") : ""; }
+    function proxy(u){
+      const clean = toHttps(u);
+      if (!clean) return "";
+      const bare = clean.replace(/^https?:\/\//i,"");
+      return "https://images.weserv.nl/?url=" + encodeURIComponent(bare) + "&fit=cover&output=webp";
+    }
+
+    async function loadInventory(){
+      const res = await fetch("./public/inventory.json?v=" + Date.now());
+      if(!res.ok) throw new Error("inventory.json load failed: " + res.status);
+      return res.json();
+    }
+
+    function testImage(url){
+      return new Promise(resolve=>{
+        const img = new Image();
+        img.referrerPolicy = "no-referrer";
+        img.onload = ()=> resolve({ok:true});
+        img.onerror = ()=> resolve({ok:false});
+        img.src = url;
+      });
+    }
+
+    async function run(){
+      document.getElementById('status').textContent = "Loading inventory…";
+      const data = await loadInventory();
+      const limit = Math.min(Number(document.getElementById('limit').value||40), 200);
+      const sample = data.slice(0, limit);
+
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = "";
+      let i = 0;
+      for (const p of sample){
+        i++;
+        const orig = p.image || "";
+        const dir = toHttps(orig);
+        const prox = proxy(orig);
+
+        const [dirRes, proxRes] = await Promise.all([
+          dir ? testImage(dir) : Promise.resolve({ok:false}),
+          prox ? testImage(prox) : Promise.resolve({ok:false})
+        ]);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i}</td>
+          <td>${p.name ? p.name.replace(/</g,"&lt;") : ""}</td>
+          <td class="cell-img">
+            <div class="${dirRes.ok?'ok':'fail'}">${dirRes.ok?'✓ Direct OK':'✗ Direct FAIL'}</div>
+            <img src="${dirRes.ok?dir:PLACEHOLDER}" alt="">
+          </td>
+          <td class="cell-img">
+            <div class="${proxRes.ok?'ok':'fail'}">${proxRes.ok?'✓ Proxy OK':'✗ Proxy FAIL'}</div>
+            <img src="${proxRes.ok?prox:PLACEHOLDER}" alt="">
+          </td>
+          <td><code>${orig || '(empty)'}</code></td>
+          <td><code>${prox || '(n/a)'}</code></td>
+        `;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('status').textContent = "Done.";
+    }
+
+    document.getElementById('run').addEventListener('click', run);
+  </script>
+</body>
+</html>

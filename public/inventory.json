@@ -877,7 +877,7 @@
     "gender": "MENS",
     "qty": 27,
     "inStock": true,
-    "image": "images/ARMAF131017.jpg"
+    "image": ""
   },
   {
     "sku": "ARMAF163513",
@@ -2637,7 +2637,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/CH65176146.jpg"
+    "image": ""
   },
   {
     "sku": "CH65127696",
@@ -4477,7 +4477,7 @@
     "gender": "MENS",
     "qty": 18,
     "inStock": true,
-    "image": "images/DGP1TO2C12.jpg"
+    "image": ""
   },
   {
     "sku": "DG81037117",
@@ -13417,7 +13417,7 @@
     "gender": "MENS",
     "qty": 18,
     "inStock": true,
-    "image": "images/YSL852821.jpg"
+    "image": ""
   },
   {
     "sku": "YSL50221",

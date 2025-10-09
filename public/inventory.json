@@ -877,7 +877,7 @@
     "gender": "MENS",
     "qty": 27,
     "inStock": true,
-    "image": "images/ARMAF131017.jpg"
+    "image": ""
   },
   {
     "sku": "ARMAF163513",
@@ -947,7 +947,7 @@
     "gender": "WOMENS",
     "qty": 24,
     "inStock": true,
-    "image": "images/ARMAF800492.jpg"
+    "image": ""
   },
   {
     "sku": "ARMAF804360",
@@ -1277,7 +1277,7 @@
     "gender": "MENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/AZZLD116000.jpg"
+    "image": ""
   },
   {
     "sku": "AZZ956623",
@@ -1347,7 +1347,7 @@
     "gender": "MENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/BHARARA210825.jpg"
+    "image": ""
   },
   {
     "sku": "BHARARANICHEWVIAL",
@@ -2637,7 +2637,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/CH65176146.jpg"
+    "image": ""
   },
   {
     "sku": "CH65127696",
@@ -4477,7 +4477,7 @@
     "gender": "MENS",
     "qty": 18,
     "inStock": true,
-    "image": "images/DGP1TO2C12.jpg"
+    "image": ""
   },
   {
     "sku": "DG81037117",
@@ -6437,7 +6437,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/JLO203-9600.jpg"
+    "image": ""
   },
   {
     "sku": "JLO015002",
@@ -11837,7 +11837,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/PRINCE027030.jpg"
+    "image": ""
   },
   {
     "sku": "SDJSJ99210008",
@@ -12277,7 +12277,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/VAL4078241.jpg"
+    "image": ""
   },
   {
     "sku": "VALLB040103",
@@ -13417,7 +13417,7 @@
     "gender": "MENS",
     "qty": 18,
     "inStock": true,
-    "image": "images/YSL852821.jpg"
+    "image": ""
   },
   {
     "sku": "YSL50221",

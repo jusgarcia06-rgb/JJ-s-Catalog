@@ -877,7 +877,7 @@
     "gender": "MENS",
     "qty": 27,
     "inStock": true,
-    "image": "images/ARMAF131017.jpg"
+    "image": ""
   },
   {
     "sku": "ARMAF163513",
@@ -4477,7 +4477,7 @@
     "gender": "MENS",
     "qty": 18,
     "inStock": true,
-    "image": "images/DGP1TO2C12.jpg"
+    "image": ""
   },
   {
     "sku": "DG81037117",
@@ -6207,7 +6207,7 @@
     "gender": "WOMENS",
     "qty": 69,
     "inStock": true,
-    "image": "images/BSHIDF40003.jpg"
+    "image": ""
   },
   {
     "sku": "HG99240012806",
@@ -11837,7 +11837,7 @@
     "gender": "WOMENS",
     "qty": 100,
     "inStock": true,
-    "image": "images/PRINCE027030.jpg"
+    "image": ""
   },
   {
     "sku": "SDJSJ99210008",

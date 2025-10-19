@@ -947,7 +947,7 @@
     "gender": "WOMENS",
     "qty": 24,
     "inStock": true,
-    "image": ""
+    "image": "images/ARMAF800492.jpg"
   },
   {
     "sku": "ARMAF804360",
@@ -1277,7 +1277,7 @@
     "gender": "MENS",
     "qty": 100,
     "inStock": true,
-    "image": ""
+    "image": "images/AZZLD116000.jpg"
   },
   {
     "sku": "AZZ956623",
@@ -6207,7 +6207,7 @@
     "gender": "WOMENS",
     "qty": 69,
     "inStock": true,
-    "image": ""
+    "image": "images/BSHIDF40003.jpg"
   },
   {
     "sku": "HG99240012806",
